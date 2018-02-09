@@ -724,6 +724,7 @@ win_render(session_t *ps, win *w, int x, int y, int wid, int hei,
 static inline void
 set_tgt_clip(session_t *ps, XserverRegion reg, const reg_data_t *pcache_reg) {
   switch (ps->o.backend) {
+    case NUM_BKEND:
     case BKEND_XRENDER:
     case BKEND_XR_GLX_HYBRID:
       XFixesSetPictureClipRegion(ps->dpy, ps->tgt_buffer.pict, 0, 0, reg);
@@ -884,9 +885,6 @@ win_on_wtype_change(session_t *ps, win *w);
 
 static void
 win_on_factor_change(session_t *ps, win *w);
-
-static void
-win_upd_run(session_t *ps, win *w, win_upd_t *pupd);
 
 static void
 calc_win_size(session_t *ps, win *w);

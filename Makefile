@@ -117,7 +117,7 @@ else
   export LD_ALTEXEC = /usr/bin/ld.gold
   OBJS += backtrace-symbols.o
   LIBS += -lbfd
-  CFLAGS += -ggdb -Wshadow
+  CFLAGS += -ggdb -Wshadow -Wall
   # CFLAGS += -Weverything -Wno-disabled-macro-expansion -Wno-padded -Wno-gnu
 endif
 
