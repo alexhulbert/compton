@@ -1239,11 +1239,6 @@ paint_preprocess(session_t *ps, win *list) {
       // is not correctly set.
       if (ps->o.unredir_if_possible && is_highest && to_paint) {
         is_highest = false;
-        if (win_is_solid(ps, w)
-            && (!w->frame_opacity || !win_has_frame(w))
-            && win_is_fullscreen(ps, w)
-            && !w->unredir_if_possible_excluded)
-          unredir_possible = true;
       }
 
       // Reset flags
