@@ -18,15 +18,6 @@ OBJS = compton.o
 # === Configuration flags ===
 CFG = -std=c99
 
-# -lGL must precede some other libraries, or it segfaults on FreeBSD (#74)
-LIBS := -lGL $(LIBS)
-OBJS += opengl.o
-
-ifneq "$(GLX_DEBUG)" ""
-  CFG += -DDEBUG_GLX
-  # CFG += -DDEBUG_GLX_PAINTREG
-endif
-
 # ==== Xinerama ====
 # Enables support for --xinerama-shadow-crop
 ifeq "$(NO_XINERAMA)" ""
@@ -62,6 +53,27 @@ endif
 ifeq "$(NO_VSYNC_DRM)" ""
   INCS += $(shell pkg-config --cflags libdrm)
   CFG += -DCONFIG_VSYNC_DRM
+endif
+
+# ==== OpenGL ====
+# Enables support for GLX backend, OpenGL VSync methods, etc.
+ifeq "$(NO_VSYNC_OPENGL)" ""
+  CFG += -DCONFIG_VSYNC_OPENGL
+  # -lGL must precede some other libraries, or it segfaults on FreeBSD (#74)
+  LIBS := -lGL $(LIBS)
+  OBJS += opengl.o
+  # Enables support for GLSL (GLX background blur, etc.)
+  ifeq "$(NO_VSYNC_OPENGL_GLSL)" ""
+    CFG += -DCONFIG_VSYNC_OPENGL_GLSL
+  endif
+  # Enables support for GL FBO (GLX multi-pass blur, etc.)
+  ifeq "$(NO_VSYNC_OPENGL_FBO)" ""
+    CFG += -DCONFIG_VSYNC_OPENGL_FBO
+  endif
+  # Enables support for GL VBO (does nothing right now)
+  ifeq "$(NO_VSYNC_OPENGL_VBO)" ""
+    CFG += -DCONFIG_VSYNC_OPENGL_VBO
+  endif
 endif
 
 # ==== D-Bus ====
@@ -105,7 +117,7 @@ else
   export LD_ALTEXEC = /usr/bin/ld.gold
   OBJS += backtrace-symbols.o
   LIBS += -lbfd
-  CFLAGS += -ggdb -Wshadow
+  CFLAGS += -ggdb -Wshadow -Wall
   # CFLAGS += -Weverything -Wno-disabled-macro-expansion -Wno-padded -Wno-gnu
 endif
 
@@ -115,8 +127,6 @@ INCS += $(shell pkg-config --cflags $(PACKAGES))
 CFLAGS += -Wall
 
 BINS = compton bin/compton-trans
-MANPAGES = man/compton.1 man/compton-trans.1
-MANPAGES_HTML = $(addsuffix .html,$(MANPAGES))
 
 # === Recipes ===
 .DEFAULT_GOAL := compton
@@ -130,20 +140,9 @@ src/.clang_complete: Makefile
 compton: $(OBJS)
 	$(CC) $(CFG) $(CPPFLAGS) $(LDFLAGS) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
 
-man/%.1: man/%.1.asciidoc
-	a2x --format manpage $<
-
-man/%.1.html: man/%.1.asciidoc
-	asciidoc $<
-
-docs: $(MANPAGES) $(MANPAGES_HTML)
-
 install: $(BINS) docs
 	@install -d "$(DESTDIR)$(BINDIR)" "$(DESTDIR)$(MANDIR)" "$(DESTDIR)$(APPDIR)"
 	@install -m755 $(BINS) "$(DESTDIR)$(BINDIR)"/
-ifneq "$(MANPAGES)" ""
-	@install -m644 $(MANPAGES) "$(DESTDIR)$(MANDIR)"/
-endif
 	@install -d \
 		"$(DESTDIR)$(ICODIR)/scalable/apps" \
 		"$(DESTDIR)$(ICODIR)/48x48/apps"
